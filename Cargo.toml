@@ -15,6 +15,7 @@ reqwest = { version = "0.12", features = [
     "json",
     "gzip",
     "rustls-tls",
+    "socks",
 ], default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

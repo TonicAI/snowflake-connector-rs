@@ -184,6 +184,38 @@ impl SnowflakeClient {
         })
     }
 
+    /// Routes every request through a SOCKS5 proxy, authenticating to it with
+    /// `username` and `password`.
+    ///
+    /// The scheme is `socks5h`, so the account's hostname is resolved by the
+    /// proxy rather than by this process. That is what lets the endpoint be one
+    /// only the proxy's own network can resolve, such as a PrivateLink address.
+    /// TLS is still negotiated end to end against that hostname, so the proxy
+    /// carries the bytes without being able to read them.
+    pub fn with_socks5_proxy(
+        self,
+        host: &str,
+        port: u16,
+        username: &str,
+        password: &str,
+    ) -> Result<Self> {
+        let proxy =
+            Proxy::all(format!("socks5h://{host}:{port}").as_str())?.basic_auth(username, password);
+
+        let client = ClientBuilder::new()
+            .gzip(true)
+            .use_rustls_tls()
+            .proxy(proxy)
+            .build()?;
+        Ok(Self {
+            http: client,
+            username: self.username,
+            auth: self.auth,
+            config: self.config,
+            connection_config: self.connection_config,
+        })
+    }
+
     pub fn with_address(
         self,
         host: &str,
